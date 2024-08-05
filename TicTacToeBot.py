@@ -1,57 +1,56 @@
 from TicTacToeClass import *
-class TicTacToeBot:
-	def __init__(self, TicTacToe ttt, botsPlayerId):
-		self.ttt = ttt
-		self.id = botsPlayerId
-	def clacBestMove(self, gametable):
-		moves = []
-		for elmt in self.getPossibleMoves(gametable)
-			newGametable = self.ttt.copy()
-			newGametable.makeMove(elmt[0], elmt[1])
-			if newGametable.hasWon():
-				if newGametable.wonPlayer == self.id:
-					return elmt
-				elif newGametable.wonPlayer == TicTacToe.PLAYER_NONE:
-					moves.append([0, elmt])
-				else:
-					moves.append([-1, elmt])
-			else:
-				tmp = self._treeFunction(newGametable)
-				tmp = tmp[0] / tmp[1]
-				moves.append([tmp, elmt])
-		tmp = [-2, [0,0]]
-		for i in moves:
-			if tmp[1] < i[1]:
-				tmp = i
-		return tmp[1]
-			
-				
-	def _getPossibleMoves(self, gametable):
-		possibleMoves = []
-		for y in range(self.ttt.yLength):
-			for x in range(self.ttt.xLength):
-				if gametable[x][y] = TicTacToe.PLAYER_NONE:
-					possibleMoves.append([x, y])
-		return possibleMoves
+import copy
 
-	def _treeFunction(self, gametable, j):
-		for elmt in self.getPossibleMoves(gametable)
-			i = 0
-			newGametable = gametable.copy()
-			newGametable.makeMove(elmt[0], elmt[1])
-			if newGametable.hasWon():
-				if newGametable.wonPlayer == self.id:
-					i += 1
-					j++
-				elif newGametable.wonPlayer == TicTacToe.PLAYER_NONE:
-					i += 0
-					j++
-				else:
-					i += -1
-					j++
-			else:
-				tmp = self._treeFunction(newGametable, j)
-				i += tmp[0]
-				j = tmp[1]
-		return [i, j]
-		
+class TicTacToeBot:
+    def __init__(self, game, bot_player_id):
+        # Initialisiert den Bot mit dem TicTacToe-Spiel und der Spieler-ID des Bots
+        self.game = game
+        self.bot_player_id = bot_player_id
+
+    def calculate_best_move(self, game_board):
+        # Berechnet den besten Zug basierend auf dem aktuellen Spielbrett
+        best_score = float('-inf')
+        best_move = None
+        for move in self._get_possible_moves(game_board):
+            self.game.setGametable(copy.deepcopy(game_board))
+            self.game.makeMoveByXY(move[0], move[1])
+            score = self._minimax(self.game.gametable, False)
+            if score > best_score:
+                best_score = score
+                best_move = move
+        return best_move
+
+    def _get_possible_moves(self, game_board):
+        # Gibt eine Liste aller möglichen Züge zurück, die auf dem aktuellen Spielbrett gemacht werden können
+        possible_moves = []
+        for y in range(self.game.yLength):
+            for x in range(self.game.xLength):
+                if game_board[x][y] == Player.NONE:
+                    possible_moves.append([x, y])
+        return possible_moves
+
+    def _minimax(self, game_board, is_maximizing):
+        # Implementiert den Minimax-Algorithmus, um den besten Zug zu finden
+        if self.game.hasWon(Player.ONE):
+            return -10  # Verlust für den Bot
+        elif self.game.hasWon(Player.TWO):
+            return 10   # Gewinn für den Bot
+        elif self.game.checkTie():
+            return 0    # Unentschieden
+        
+        if is_maximizing:
+            best_score = float('-inf')
+            for move in self._get_possible_moves(game_board):
+                self.game.setGametable(copy.deepcopy(game_board))
+                self.game.makeMoveByXY(move[0], move[1])
+                score = self._minimax(self.game.gametable, False)
+                best_score = max(score, best_score)
+            return best_score
+        else:
+            best_score = float('inf')
+            for move in self._get_possible_moves(game_board):
+                self.game.setGametable(copy.deepcopy(game_board))
+                self.game.makeMoveByXY(move[0], move[1])
+                score = self._minimax(self.game.gametable, True)
+                best_score = min(score, best_score)
+            return best_score
